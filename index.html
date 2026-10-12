@@ -144,33 +144,32 @@
       <p>RBG Batch-1520 (Shift: 10 AM - 7 PM)</p>
     </header>
 
-    <div id="loading">Loading team members...</div>
+    <div id="loading">Loading team members from sheet...</div>
     <div id="member-list"></div>
   </div>
 
   <script>
-    // Web App URL from your deployment
     const WEB_APP_URL = "https://script.google.com/a/macros/google.com/s/AKfycbxOeTg9Otc98MKDUFa4x9c3F8xVBi6cL8NTnENTwiCM94WUBjw24YaSaiid-ql8CQdMJg/exec";
 
-    // Team definitions extracted from your roster
-    const teamMembers = [
-      { id: "20684390", ldap: "salunkeva", name: "Salunke Vaishnavi" },
-      { id: "20661043", ldap: "babucha", name: "Chappidi Sheshank Babu" },
-      { id: "20672220", ldap: "deshettiv", name: "Deshetti Vishal" },
-      { id: "20672574", ldap: "mdju", name: "Mohammed Junaid" },
-      { id: "20672879", ldap: "abairapogu", name: "Anil Kumar Bairapogu" },
-      { id: "20673020", ldap: "kallurbharath", name: "Kallur Bharath Kumar" },
-      { id: "20671354", ldap: "akunir", name: "Akun Rani" },
-      { id: "20672928", ldap: "achantasairam", name: "Achanta Sai Ram" },
-      { id: "20671222", ldap: "sayyedfurqan", name: "Sayyed Furqan Ilahi" },
-      { id: "20672982", ldap: "yararahul", name: "Yara Rahul Yadav" },
-      { id: "20669600", ldap: "chedudeepus", name: "Chedudeepu Sai Charan" },
-      { id: "20673069", ldap: "uppulapub", name: "Uppulapu Bhuvaneshwari" },
-      { id: "20672888", ldap: "shaiksravani", name: "Shaik Sravani" },
-      { id: "20677027", ldap: "aramryya", name: "A Ramya" },
-      { id: "20673410", ldap: "kundasravani", name: "Kunda Sravani" },
-      { id: "20673098", ldap: "shaikmaheboob", name: "Shaik Maheboob Pasha" }
-    ];
+    let teamMembers = [];
+
+    async function loadTeamData() {
+      const loadingEl = document.getElementById('loading');
+      try {
+        const response = await fetch(WEB_APP_URL);
+        teamMembers = await response.json();
+        
+        if (teamMembers.error) {
+          loadingEl.innerText = "Error: " + teamMembers.error;
+          return;
+        }
+        
+        renderUI();
+      } catch (err) {
+        console.error(err);
+        loadingEl.innerText = "Failed to load team members from sheet.";
+      }
+    }
 
     function renderUI() {
       const listContainer = document.getElementById('member-list');
@@ -187,7 +186,7 @@
           </div>
 
           <div class="input-row" id="inputs-${m.ldap}" style="display: none;">
-            <input type="text" id="extra-${m.ldap}" placeholder="Enter ETA (e.g. 5:35 AM) or Route No" />
+            <input type="text" id="extra-${m.ldap}" placeholder="Enter ETA or Route No" />
           </div>
 
           <div class="buttons-group">
@@ -206,7 +205,6 @@
       inputRow.style.display = 'flex';
       inputField.focus();
       
-      // Update button behavior temporarily to submit with ETA/Route
       const card = document.getElementById(`card-${ldap}`);
       const buttons = card.querySelectorAll('.buttons-group button');
       
@@ -234,7 +232,6 @@
 
       const payload = { ldap: ldap, status: status, eta: eta, route: route };
 
-      // Send data to Google Apps Script Web App using CORS mode
       fetch(WEB_APP_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -252,7 +249,7 @@
       });
     }
 
-    window.onload = renderUI;
+    window.onload = loadTeamData;
   </script>
 </body>
 </html>
